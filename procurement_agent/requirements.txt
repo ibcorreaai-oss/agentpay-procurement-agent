@@ -1,0 +1,7 @@
+circle-developer-controlled-wallets==9.6.0
+web3==7.16.0
+eth-abi==6.0.0
+x402[requests]==2.20.0
+google-cloud-firestore==2.29.0
+requests==2.34.2
+pydantic
