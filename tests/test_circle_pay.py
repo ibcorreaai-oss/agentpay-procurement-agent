@@ -64,6 +64,44 @@ def test_sign_typed_data_converts_domain_to_camel_case_and_returns_bytes():
         assert domain_type_fields == {"name", "version", "chainId", "verifyingContract"}
 
 
+def test_sign_typed_data_converts_bytes_fields_in_message_to_hex():
+    """O SDK x402 passa nonce (bytes32) como bytes cru do Python --
+    achado real testando pagamento de verdade: json.dumps quebrava com
+    'Object of type bytes is not JSON serializable'."""
+    with patch("procurement_agent.tools.circle_pay.dcw") as mock_dcw, \
+         patch("procurement_agent.tools.circle_pay.circle_utils") as mock_utils:
+        mock_utils.init_developer_controlled_wallets_client.return_value = MagicMock()
+        mock_utils.generate_entity_secret_ciphertext.return_value = "fake-ciphertext"
+
+        mock_signing_api_instance = MagicMock()
+        mock_signing_api_instance.sign_typed_data.return_value = MagicMock(
+            data=MagicMock(signature="0x" + "ab" * 65)
+        )
+        mock_dcw.SigningApi.return_value = mock_signing_api_instance
+        mock_dcw.SignTypedDataRequest = MagicMock(side_effect=lambda **kw: kw)
+
+        signer = CircleEvmSigner(
+            api_key="fake-key", entity_secret="fake-secret",
+            wallet_id="wallet-123", wallet_address="0xAgentAddress",
+        )
+        domain = FakeDomain(name="USD Coin", version="2", chain_id=8453, verifying_contract="0xTokenAddress")
+        types = {"TransferWithAuthorization": [FakeField(name="nonce", type="bytes32")]}
+        message = {
+            "from": "0xAgentAddress",
+            "to": "0xPayTo",
+            "value": 2000,
+            "nonce": bytes.fromhex("aa" * 32),
+        }
+
+        # Nao deve levantar TypeError -- essa e a regressao real que achamos
+        signer.sign_typed_data(domain, types, "TransferWithAuthorization", message)
+
+        sent_kwargs = mock_signing_api_instance.sign_typed_data.call_args.kwargs
+        payload = json.loads(sent_kwargs["sign_typed_data_request"]["data"])
+        assert payload["message"]["nonce"] == "0x" + "aa" * 32
+        assert payload["message"]["value"] == 2000
+
+
 def test_signer_address_property():
     with patch("procurement_agent.tools.circle_pay.dcw"), \
          patch("procurement_agent.tools.circle_pay.circle_utils") as mock_utils:

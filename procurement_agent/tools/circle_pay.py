@@ -40,6 +40,21 @@ _EIP712_DOMAIN_FIELD_TYPES = {
 }
 
 
+def _jsonable(value: Any) -> Any:
+    """O SDK x402 passa campos EIP-712 tipo `bytes32` (ex.: nonce da
+    autorizacao EIP-3009) como `bytes` cru do Python -- json.dumps nao
+    serializa isso sozinho. Converte recursivamente pra hex "0x..."
+    (representacao padrao de bytes32 em JSON de assinatura EIP-712),
+    mantendo o resto (int, str, dict, list) como esta."""
+    if isinstance(value, bytes):
+        return "0x" + value.hex()
+    if isinstance(value, dict):
+        return {k: _jsonable(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_jsonable(v) for v in value]
+    return value
+
+
 class CircleEvmSigner:
     """Satisfaz `x402.mechanisms.evm.signer.ClientEvmSigner`:
     precisa so de `.address` (str) e `.sign_typed_data(domain, types,
@@ -92,9 +107,9 @@ class CircleEvmSigner:
         typed_data_payload = json.dumps(
             {
                 "types": types_json,
-                "domain": domain_json,
+                "domain": _jsonable(domain_json),
                 "primaryType": primary_type,
-                "message": message,
+                "message": _jsonable(message),
             }
         )
 
