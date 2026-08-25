@@ -26,6 +26,22 @@ financeira real e verificável.
 6. **Grava tudo no Firestore** (ledger de pagamentos + log de auditoria)
    e reporta o resultado.
 
+## Prova de pagamento real, de ponta a ponta
+
+Transação real confirmada e verificada on-chain de forma independente
+pelo próprio agente (Base Sepolia, USDC, assinada via Circle MPC):
+[`0x31c9704854b79910b89314e21a24569b7ac1645c962789010d0b9c1f53263e2f`](https://sepolia.basescan.org/tx/0x31c9704854b79910b89314e21a24569b7ac1645c962789010d0b9c1f53263e2f)
+
+O único provedor real de terceiros que encontramos (scrape402.xyz) só
+aceita **Base mainnet** — pagar nele de verdade exigiria comprar USDC
+real só para validar o fluxo. Em vez disso construímos um segundo
+provedor próprio, self-hosted (`demo_provider/`), que fala o **mesmo
+protocolo x402 oficial** (esquema `exact`/EIP-3009) contra a testnet
+Base Sepolia: zero custo real, mesma segurança, mesmo código de
+pagamento do agente. Ambos os provedores (scrape402 real em mainnet
+para cotação, provedor próprio em testnet para o pagamento de ponta a
+ponta) estão configurados e deployados.
+
 ## Stack obrigatório da hackathon
 
 | Requisito | Como é atendido |
@@ -98,6 +114,15 @@ gcloud run services update agentpay-procurement --region=us-central1 \
   --set-env-vars="GOOGLE_GENAI_USE_ENTERPRISE=1,GOOGLE_CLOUD_PROJECT=<seu-projeto>,GOOGLE_CLOUD_LOCATION=global"
 ```
 
+Além dessas, o serviço também precisa das 4 variáveis da Circle
+(`CIRCLE_API_KEY`, `CIRCLE_ENTITY_SECRET`, `CIRCLE_WALLET_ID`,
+`CIRCLE_WALLET_ADDRESS` — mesmos nomes do `.env`) para conseguir pagar
+de verdade em produção, não só localmente.
+
+O provedor próprio de testnet (`demo_provider/`) também tem deploy
+próprio no Cloud Run (serviço `agentpay-demo-provider`), precisando só
+de `FACILITATOR_PRIVATE_KEY` como variável de ambiente.
+
 Gemini 3.5 no Vertex AI só existe no endpoint `global` — usar uma
 região específica (ex.: `us-central1`) na variável `GOOGLE_CLOUD_LOCATION`
 dá 404 "model not found", mesmo que o serviço Cloud Run em si esteja
@@ -110,6 +135,7 @@ pip install pytest pytest-mock
 pytest tests/ -v
 ```
 
-18 testes, cobrindo verificação on-chain (mockada), teto de orçamento
+28 testes, cobrindo verificação on-chain (mockada), teto de orçamento
 (incluindo um bug real de precisão de float achado e corrigido durante
-o desenvolvimento), idempotência, e assinatura EIP-712.
+o desenvolvimento), idempotência, assinatura EIP-712, seleção de RPC
+por chain id, e reconciliação de pagamentos pendentes.

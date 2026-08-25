@@ -5,9 +5,13 @@ app real rodando → ElevenLabs narra (voz clonada do Igor) → ffmpeg monta.
 Diferença aqui: a "app" é o terminal rodando `adk run` + o dashboard do
 Cloud Run/Firestore no navegador (não uma UI web própria).
 
-**Bloqueado até a Circle estar configurada** (ver `MANUAL_SETUP_CHECKLIST.md`)
-— sem isso não existe transação real pra mostrar. Roteiro pronto pra
-gravar no minuto em que a credencial existir.
+**Desbloqueado 25/08**: Circle configurada, pagamento real de ponta a
+ponta confirmado on-chain (Base Sepolia, tx
+`0x31c9704854b79910b89314e21a24569b7ac1645c962789010d0b9c1f53263e2f`).
+Falta só aplicar as credenciais Circle no serviço `agentpay-procurement`
+deployado (hoje só rodou local) antes de gravar o segmento 3/4 contra o
+serviço de verdade — ver README. Pendência de credencial: só o Igor
+pode autorizar essa etapa (bloqueio de segurança do classificador).
 
 ## Exigências da submissão (Devpost) que o vídeo TEM que cumprir
 - Overview do problema + proposta de valor + demo em ação
