@@ -17,6 +17,7 @@ from typing import Any
 
 from circle.web3 import developer_controlled_wallets as dcw
 from circle.web3 import utils as circle_utils
+from web3 import Web3
 
 from procurement_agent.logging_setup import get_logger, log_event
 
@@ -70,7 +71,13 @@ class CircleEvmSigner:
         self._api_key = api_key
         self._entity_secret = entity_secret
         self._wallet_id = wallet_id
-        self._address = wallet_address
+        # Circle devolve o endereco em minusculas -- valido, mas sem
+        # checksum EIP-55. web3.py do lado do servidor/facilitator
+        # recusa endereco sem checksum ("only accepts checksum
+        # addresses"), achado tentando um pagamento real. Normaliza
+        # aqui, na fonte, pra nenhum consumidor a jusante precisar
+        # lembrar disso.
+        self._address = Web3.to_checksum_address(wallet_address)
         api_client = circle_utils.init_developer_controlled_wallets_client(
             api_key=api_key, entity_secret=entity_secret
         )

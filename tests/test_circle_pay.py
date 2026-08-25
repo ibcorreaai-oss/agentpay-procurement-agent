@@ -2,7 +2,13 @@ import json
 from unittest.mock import MagicMock, patch
 from dataclasses import dataclass
 
+from web3 import Web3
+
 from procurement_agent.tools.circle_pay import CircleEvmSigner
+
+FAKE_AGENT_ADDRESS = "0x" + "11" * 20
+FAKE_TOKEN_ADDRESS = "0x" + "22" * 20
+FAKE_PAY_TO_ADDRESS = "0x" + "33" * 20
 
 
 @dataclass
@@ -36,7 +42,7 @@ def test_sign_typed_data_converts_domain_to_camel_case_and_returns_bytes():
             api_key="fake-key",
             entity_secret="fake-secret",
             wallet_id="wallet-123",
-            wallet_address="0xAgentAddress",
+            wallet_address=FAKE_AGENT_ADDRESS,
         )
 
         domain = FakeDomain(name="USD Coin", version="2", chain_id=8453, verifying_contract="0xTokenAddress")
@@ -82,7 +88,7 @@ def test_sign_typed_data_converts_bytes_fields_in_message_to_hex():
 
         signer = CircleEvmSigner(
             api_key="fake-key", entity_secret="fake-secret",
-            wallet_id="wallet-123", wallet_address="0xAgentAddress",
+            wallet_id="wallet-123", wallet_address=FAKE_AGENT_ADDRESS,
         )
         domain = FakeDomain(name="USD Coin", version="2", chain_id=8453, verifying_contract="0xTokenAddress")
         types = {"TransferWithAuthorization": [FakeField(name="nonce", type="bytes32")]}
@@ -102,11 +108,15 @@ def test_sign_typed_data_converts_bytes_fields_in_message_to_hex():
         assert payload["message"]["value"] == 2000
 
 
-def test_signer_address_property():
+def test_signer_address_normalizes_to_checksum():
+    """Circle devolve o endereco em minusculas -- web3.py do lado do
+    servidor/facilitator recusa endereco sem checksum EIP-55, achado
+    tentando um pagamento real de verdade."""
     with patch("procurement_agent.tools.circle_pay.dcw"), \
          patch("procurement_agent.tools.circle_pay.circle_utils") as mock_utils:
         mock_utils.init_developer_controlled_wallets_client.return_value = MagicMock()
+        lowercase_address = FAKE_AGENT_ADDRESS.lower()
         signer = CircleEvmSigner(
-            api_key="k", entity_secret="s", wallet_id="w", wallet_address="0xABC",
+            api_key="k", entity_secret="s", wallet_id="w", wallet_address=lowercase_address,
         )
-        assert signer.address == "0xABC"
+        assert signer.address == Web3.to_checksum_address(lowercase_address)

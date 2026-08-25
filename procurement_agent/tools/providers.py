@@ -21,8 +21,8 @@ import requests
 import x402
 from x402 import x402ClientSync
 from x402.http.clients.requests import x402HTTPAdapter
-from x402.http.constants import PAYMENT_RESPONSE_HEADER, X_PAYMENT_RESPONSE_HEADER
-from x402.http.utils import decode_payment_response_header
+from x402.http.constants import PAYMENT_REQUIRED_HEADER, PAYMENT_RESPONSE_HEADER, X_PAYMENT_RESPONSE_HEADER
+from x402.http.utils import decode_payment_required_header, decode_payment_response_header
 from x402.mechanisms.evm.exact.register import register_exact_evm_client
 
 from procurement_agent.logging_setup import get_logger, log_event
@@ -92,8 +92,16 @@ def get_quote(provider: DataProvider, timeout_s: float = 10.0) -> Optional[Quote
         )
         return None
 
+    # V2 pode mandar a cotacao no header PAYMENT-REQUIRED (nosso proprio
+    # servidor faz isso) OU no corpo da resposta (scrape402 faz isso) --
+    # o SDK oficial trata os dois casos no lado cliente, entao replicamos
+    # aqui: tenta o header primeiro, cai pro body se nao tiver.
+    header_value = resp.headers.get(PAYMENT_REQUIRED_HEADER)
     try:
-        parsed = x402.parse_payment_required(resp.json())
+        if header_value:
+            parsed = decode_payment_required_header(header_value)
+        else:
+            parsed = x402.parse_payment_required(resp.json())
     except Exception as exc:  # payload malformado de um provedor de terceiros
         log_event(logger, 30, "402 nao seguiu o schema x402", provider_id=provider.provider_id, error=str(exc))
         return None

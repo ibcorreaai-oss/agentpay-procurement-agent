@@ -44,6 +44,10 @@ logger = get_logger(__name__)
 
 ROOT_MODEL = "gemini-3.5-flash"
 
+DEMO_PROVIDER_URL = os.environ.get(
+    "DEMO_PROVIDER_URL", "https://agentpay-demo-provider-439350431205.us-central1.run.app"
+)
+
 DEFAULT_PROVIDERS = [
     DataProvider(
         provider_id="scrape402_extract",
@@ -56,6 +60,12 @@ DEFAULT_PROVIDERS = [
         resource_url="https://scrape402.xyz/diff/snapshot",
         method="POST",
         request_kwargs={"json": {"url": "https://example.com"}},
+    ),
+    DataProvider(
+        provider_id="demo_gas_price",
+        resource_url=f"{DEMO_PROVIDER_URL}/gas-price",
+        method="POST",
+        request_kwargs={"json": {}},
     ),
 ]
 
@@ -70,8 +80,21 @@ BASE_SEPOLIA_RPC_URLS = [
 ]
 
 
+BASE_SEPOLIA_CHAIN_ID = "84532"
+BASE_MAINNET_CHAIN_ID = "8453"
+
+
 def _rpc_urls_for(network: str) -> list[str]:
-    return BASE_SEPOLIA_RPC_URLS if "sepolia" in network else BASE_MAINNET_RPC_URLS
+    """`network` vem no formato CAIP-2 (`eip155:84532`), NUNCA contem a
+    palavra "sepolia" -- um bug real (achado testando pagamento de
+    verdade) checava `"sepolia" in network`, que e sempre False pra
+    qualquer network CAIP-2, e sempre caia no RPC de mainnet errado,
+    mesmo pra uma tx que era genuinamente testnet. Compara pelo chain id
+    de verdade."""
+    chain_id = network.rsplit(":", 1)[-1]
+    if chain_id == BASE_SEPOLIA_CHAIN_ID:
+        return BASE_SEPOLIA_RPC_URLS
+    return BASE_MAINNET_RPC_URLS
 
 
 def build_root_agent(
@@ -155,6 +178,13 @@ def build_root_agent(
             ledger.mark_failed(key, "settlement sem tx_hash no header de resposta")
             return {"error": "pagamento processado mas sem prova de tx_hash -- tratando como falha"}
 
+        # Grava o tx_hash JA, antes de tentar verificar -- se o RPC de
+        # verificacao cair logo depois, o hash nao se perde (bug real
+        # que ja mordeu esse padrao 2x: 22/08 no AgentPay original, e
+        # de novo aqui em 25/08 antes desse fix, com pagamentos reais
+        # presos em tx_hash=None sem jeito de reconciliar).
+        ledger.mark_provider_confirmed_pending_verify(key, result.tx_hash)
+
         try:
             verified = verify_transfer(
                 tx_hash=result.tx_hash,
@@ -164,7 +194,8 @@ def build_root_agent(
             )
         except RpcUnavailableError as exc:
             # pagamento pode ja estar confirmado, so a VERIFICACAO falhou --
-            # nao marca como falho, fica PENDING_VERIFY pra reconciliar depois
+            # nao marca como falho, fica PENDING_VERIFY (tx_hash ja
+            # gravado acima) pra reconciliar depois
             log_event(logger, 30, "RPC indisponivel na verificacao, deixando pendente", tx_hash=result.tx_hash, error=str(exc))
             return {
                 "status": "pago_verificacao_pendente",

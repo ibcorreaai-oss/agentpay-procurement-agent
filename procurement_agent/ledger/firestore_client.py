@@ -56,6 +56,21 @@ class LedgerClient:
             }
         )
 
+    def mark_provider_confirmed_pending_verify(self, key: str, tx_hash: str) -> None:
+        """O provedor/facilitator ja confirmou a liquidacao (temos o
+        tx_hash), mas a NOSSA verificacao on-chain independente ainda
+        nao rodou com sucesso (RPC caiu). Grava o tx_hash JA, antes de
+        qualquer coisa poder dar errado -- sem isso, um RPC instavel
+        perde o hash pra sempre e a reconciliacao fica impossivel (bug
+        real que ja mordeu esse padrao 2x: incidente 22/08 do AgentPay
+        original, e de novo aqui em 25/08 antes desse fix)."""
+        self._payments.document(key).update(
+            {
+                "status": "PENDING_VERIFY",
+                "tx_hash": tx_hash,
+            }
+        )
+
     def mark_confirmed(self, key: str, tx_hash: str) -> None:
         self._payments.document(key).update(
             {
