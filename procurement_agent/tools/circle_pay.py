@@ -22,6 +22,23 @@ from procurement_agent.logging_setup import get_logger, log_event
 
 logger = get_logger(__name__)
 
+# EIP-712 exige que "types" descreva TAMBEM os campos do proprio "domain"
+# via uma entrada "EIP712Domain" -- o SDK oficial x402 NAO inclui isso (ele
+# usa `eth_account.sign_typed_data(domain_data=..., message_types=...)`,
+# que deriva isso sozinho por baixo dos panos). A API crua da Circle
+# (`eth_signTypedData_v4` padrao) espera o JSON completo, entao temos que
+# montar essa entrada manualmente -- confirmado contra o exemplo oficial
+# da documentacao da Circle antes de escrever este codigo. So inclui os
+# campos que realmente aparecerem no domain (mesmo padrao do exemplo
+# oficial, que so lista os campos presentes).
+_EIP712_DOMAIN_FIELD_TYPES = {
+    "name": "string",
+    "version": "string",
+    "chainId": "uint256",
+    "verifyingContract": "address",
+    "salt": "bytes32",
+}
+
 
 class CircleEvmSigner:
     """Satisfaz `x402.mechanisms.evm.signer.ClientEvmSigner`:
@@ -65,6 +82,12 @@ class CircleEvmSigner:
             domain_json["chainId"] = domain_json.pop("chain_id")
         if "verifying_contract" in domain_json:
             domain_json["verifyingContract"] = domain_json.pop("verifying_contract")
+
+        types_json["EIP712Domain"] = [
+            {"name": field_name, "type": _EIP712_DOMAIN_FIELD_TYPES[field_name]}
+            for field_name in domain_json
+            if field_name in _EIP712_DOMAIN_FIELD_TYPES
+        ]
 
         typed_data_payload = json.dumps(
             {

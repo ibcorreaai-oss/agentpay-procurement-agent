@@ -30,6 +30,12 @@ def new_correlation_id() -> str:
     return cid
 
 
+def set_correlation_id(cid: str) -> None:
+    """Registra um correlation ID ja existente (ex.: o invocation_id do
+    ADK) pro contexto de execucao atual, em vez de gerar um novo."""
+    _correlation_id.set(cid)
+
+
 def get_correlation_id() -> str:
     return _correlation_id.get()
 

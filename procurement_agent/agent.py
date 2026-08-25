@@ -5,7 +5,7 @@ só conversa.
 
 Arquitetura (cada peca ja testada isoladamente antes de chegar aqui):
   get_price_quote     -> providers.get_quote()          (NUNCA paga)
-  audit_spend          -> AgentTool(auditor_agent)        (multi-agent nativo do ADK, so aprova/veta)
+  spend_auditor          -> AgentTool(auditor_agent)        (multi-agent nativo do ADK, so aprova/veta)
   execute_payment       -> budget_guard + idempotency (gates DETERMINISTICOS,
                             aplicados por codigo, nunca pela LLM) -> providers.pay_and_fetch()
                             (Circle assina EIP-712, x402 SDK oficial liquida)
@@ -20,23 +20,25 @@ pela primeira vez de verdade)."""
 
 from __future__ import annotations
 
+import dataclasses
 import os
 from typing import Optional
 
 from google.adk.agents.llm_agent import Agent
 from google.adk.tools.agent_tool import AgentTool
+from google.adk.tools.tool_context import ToolContext
 
 from procurement_agent.auditor import auditor_agent
 from procurement_agent.circle_signer import build_signer_from_env
 from procurement_agent.ledger.firestore_client import LedgerClient
-from procurement_agent.logging_setup import get_logger, log_event, new_correlation_id
+from procurement_agent.logging_setup import get_logger, log_event, set_correlation_id
 from procurement_agent.tools import budget_guard, idempotency
 from procurement_agent.tools.onchain_verify import (
     RpcUnavailableError,
     VerificationMismatchError,
     verify_transfer,
 )
-from procurement_agent.tools.providers import DataProvider, get_quote, pay_and_fetch
+from procurement_agent.tools.providers import DataProvider, Quote, get_quote, pay_and_fetch
 
 logger = get_logger(__name__)
 
@@ -78,15 +80,24 @@ def build_root_agent(
 ) -> Agent:
     ledger = ledger or LedgerClient(project=os.environ.get("GOOGLE_CLOUD_PROJECT"))
     providers = providers if providers is not None else DEFAULT_PROVIDERS
-    correlation_id = new_correlation_id()
-    quotes_cache: dict[str, object] = {}
+
+    # IMPORTANTE: `root_agent` e construido 1x no import do modulo, mas o
+    # mesmo processo/instancia do Cloud Run atende MUITAS execucoes
+    # diferentes (sessoes diferentes, possivelmente concorrentes) ao longo
+    # da vida do container. Por isso nada de estado por-execucao pode viver
+    # numa closure aqui (correlation_id fixo, dict de cache compartilhado
+    # entre TODAS as sessoes) -- isso ja foi um bug real achado na
+    # autorrevisao: cotacoes de uma sessao vazavam pra outra, e a chave de
+    # idempotencia nao mudava entre execucoes distintas. Estado por-sessao
+    # tem que vir do ToolContext do ADK (injetado automaticamente pelo tipo
+    # do parametro, nunca aparece pro LLM).
 
     def list_available_providers() -> list[dict]:
         """Lista os provedores de dados configurados que o agente pode
         comprar. Use isso primeiro pra saber o que existe pra comparar."""
         return [{"provider_id": p.provider_id, "resource_url": p.resource_url} for p in providers]
 
-    def get_price_quote(provider_id: str) -> dict:
+    def get_price_quote(provider_id: str, tool_context: ToolContext) -> dict:
         """Pega uma cotacao de preco em USDC de um provedor especifico,
         SEM pagar nada. Chame pra cada provedor que quiser comparar antes
         de decidir qual comprar."""
@@ -96,7 +107,7 @@ def build_root_agent(
         quote = get_quote(provider)
         if quote is None:
             return {"error": f"provedor '{provider_id}' nao respondeu com uma cotacao valida agora"}
-        quotes_cache[provider_id] = quote
+        tool_context.state[f"quote:{provider_id}"] = dataclasses.asdict(quote)
         return {
             "provider_id": quote.provider_id,
             "price_usdc": quote.price_usdc,
@@ -104,17 +115,21 @@ def build_root_agent(
             "network": quote.network,
         }
 
-    def execute_payment(provider_id: str, justification: str) -> dict:
+    def execute_payment(provider_id: str, justification: str, tool_context: ToolContext) -> dict:
         """Executa o pagamento de verdade pro provedor ja cotado com
         get_price_quote. So chame depois de ter cotado o preco E pedido
-        auditoria com audit_spend. `justification` deve explicar por que
+        auditoria com spend_auditor. `justification` deve explicar por que
         vale a pena pagar esse preco por esse dado. Pode ser recusado
         mesmo que a auditoria tenha aprovado, se violar o teto de
         orcamento pre-configurado -- isso e um guardrail independente,
         aplicado por codigo, nao pela sua propria decisao."""
-        quote = quotes_cache.get(provider_id)
-        if quote is None:
+        correlation_id = tool_context.invocation_id
+        set_correlation_id(correlation_id)
+
+        quote_dict = tool_context.state.get(f"quote:{provider_id}")
+        if quote_dict is None:
             return {"error": f"nenhuma cotacao valida em cache pra '{provider_id}' -- chame get_price_quote primeiro"}
+        quote = Quote(**quote_dict)
 
         key = idempotency.payment_key(correlation_id, provider_id, quote.price_usdc)
         if idempotency.is_duplicate(ledger, key):
@@ -190,9 +205,9 @@ def build_root_agent(
             "2. get_price_quote pra CADA provedor disponivel -- compare os precos.\n"
             "3. Escolha o provedor com melhor custo-beneficio (nao necessariamente o mais barato "
             "se a descricao indicar qualidade/escopo diferente).\n"
-            "4. audit_spend, passando o provedor escolhido, o preco cotado e sua justificativa -- "
+            "4. spend_auditor, passando o provedor escolhido, o preco cotado e sua justificativa -- "
             "isso e obrigatorio, nunca pule esse passo.\n"
-            "5. So se audit_spend aprovar: execute_payment com a mesma justificativa.\n"
+            "5. So se spend_auditor aprovar: execute_payment com a mesma justificativa.\n"
             "6. Resuma o resultado final: o que foi comprado, de quem, por quanto, e o hash da "
             "transacao (se confirmado).\n\n"
             "Voce esta operando dentro de um orcamento diario pre-aprovado (nao e uma decisao "

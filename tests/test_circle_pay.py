@@ -56,6 +56,13 @@ def test_sign_typed_data_converts_domain_to_camel_case_and_returns_bytes():
         assert "verifying_contract" not in payload["domain"]
         assert payload["primaryType"] == "TransferWithAuthorization"
 
+        # EIP712Domain precisa estar presente em types, listando exatamente
+        # os campos que existem no domain (Circle exige isso explicitamente,
+        # o SDK oficial x402 nao inclui porque delega pro eth_account, que
+        # deriva sozinho -- a API crua da Circle nao deriva).
+        domain_type_fields = {f["name"] for f in payload["types"]["EIP712Domain"]}
+        assert domain_type_fields == {"name", "version", "chainId", "verifyingContract"}
+
 
 def test_signer_address_property():
     with patch("procurement_agent.tools.circle_pay.dcw"), \
