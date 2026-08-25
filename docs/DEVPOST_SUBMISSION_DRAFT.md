@@ -134,5 +134,6 @@ https://github.com/ibcorreaai-oss/agentpay-procurement-agent/blob/master/docs/AR
   https://dev.to/ibcorrea/building-an-ai-agent-that-shops-gets-audited-and-pays-on-its-own-5hgg
   — público, com a frase de disclosure, link já adicionado ao campo
   de bônus da submissão no Devpost.
-- [ ] Post em rede social com a hashtag **#AllThingsAgenticHackathon**
-  (X, LinkedIn, Instagram ou Facebook) — ainda não feito, opcional.
+- [x] **Post social PUBLICADO** (25/08): https://x.com/ibcorreax/status/2092364550146257384
+  — com a hashtag #AllThingsAgenticHackathon, link já adicionado ao
+  campo de bônus da submissão no Devpost.
