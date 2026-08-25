@@ -1,13 +1,16 @@
 <!--
+PUBLICADO 25/08/2026: https://dev.to/ibcorrea/building-an-ai-agent-that-shops-gets-audited-and-pays-on-its-own-5hgg
+Publicado com autorizacao explicita do Igor ("publica o blog post tambem" +
+"eu quero que voce faca tudo"), login feito por ele (GitHub OAuth no dev.to,
+eu nao fiz login/criei conta sozinho). Link ja adicionado ao campo de bonus
+da submissao no Devpost.
+-->
+
+<!--
 Rascunho pro "Optional Developer Contribution" da submissao (blog/podcast/video
 cobrindo como o projeto foi construido, publicado em plataforma publica tipo
 dev.to/medium.com, com a frase obrigatoria de que foi escrito pra participar
 do hackathon). Vale ate 0.2 ponto bonus na nota final.
-
-Pendente: publicar em dev.to (ou medium.com) -- isso e uma acao pequena que
-EU (Claude) NAO devo fazer sozinho sem autorizacao (postar conteudo publico
-em nome do Igor e "Explicit permission required"). Deixar pronto aqui, Igor
-decide se quer publicar e onde (precisa de conta dev.to/medium dele).
 -->
 
 # Building an AI Agent That Shops, Gets Audited, and Pays — On Its Own

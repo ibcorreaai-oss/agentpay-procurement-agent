@@ -129,10 +129,10 @@ https://github.com/ibcorreaai-oss/agentpay-procurement-agent/blob/master/docs/AR
 ## Demo video
 **https://youtu.be/XsQc7Wyndxc** (publicado 25/08/2026, 2:08, "Não listado")
 
-## Bonus (opcional)
-- Blog post pronto em `docs/BLOG_POST_DRAFT.md` — **precisa ser
-  PÚBLICO (não unlisted)** pro bônus valer, e precisa da frase
-  dizendo que foi escrito pra participar deste hackathon (já está no
-  rascunho). Publicar em dev.to ou medium.com.
-- Post em rede social com a hashtag **#AllThingsAgenticHackathon**
-  (X, LinkedIn, Instagram ou Facebook) também vale bônus.
+## Bonus
+- [x] **Blog post PUBLICADO** (25/08):
+  https://dev.to/ibcorrea/building-an-ai-agent-that-shops-gets-audited-and-pays-on-its-own-5hgg
+  — público, com a frase de disclosure, link já adicionado ao campo
+  de bônus da submissão no Devpost.
+- [ ] Post em rede social com a hashtag **#AllThingsAgenticHackathon**
+  (X, LinkedIn, Instagram ou Facebook) — ainda não feito, opcional.
