@@ -29,8 +29,11 @@ financeira real e verificável.
 ## Prova de pagamento real, de ponta a ponta
 
 Transação real confirmada e verificada on-chain de forma independente
-pelo próprio agente (Base Sepolia, USDC, assinada via Circle MPC):
-[`0x31c9704854b79910b89314e21a24569b7ac1645c962789010d0b9c1f53263e2f`](https://sepolia.basescan.org/tx/0x31c9704854b79910b89314e21a24569b7ac1645c962789010d0b9c1f53263e2f)
+pelo próprio agente, chamando o **serviço público deployado no Cloud
+Run** (não um teste local) — comparou 3 provedores, pediu auditoria,
+checou orçamento e pagou sozinho (Base Sepolia, USDC, assinada via
+Circle MPC):
+[`0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3`](https://sepolia.basescan.org/tx/0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3)
 
 O único provedor real de terceiros que encontramos (scrape402.xyz) só
 aceita **Base mainnet** — pagar nele de verdade exigiria comprar USDC
