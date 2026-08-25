@@ -81,9 +81,7 @@ https://github.com/ibcorreaai-oss/agentpay-procurement-agent/blob/master/docs/AR
 (diagrama mermaid renderiza direto no GitHub)
 
 ## Demo video
-`procurement_agent_demo_video.mp4` (Screenshots/) → sobe no YouTube
-(unlisted é aceito por norma geral do Devpost; não listado ≠ privado)
-→ cola o link aqui.
+**https://youtu.be/XsQc7Wyndxc** (publicado 25/08/2026, 2:08, "Não listado")
 
 ## Bonus (opcional)
 - Blog post pronto em `docs/BLOG_POST_DRAFT.md` — **precisa ser
