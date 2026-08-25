@@ -44,10 +44,16 @@ ROOT_MODEL = "gemini-3.5-flash"
 
 DEFAULT_PROVIDERS = [
     DataProvider(
-        provider_id="scrape402",
+        provider_id="scrape402_extract",
         resource_url="https://scrape402.xyz/extract/basic",
         method="POST",
         request_kwargs={"json": {"url": "https://example.com", "format": "markdown"}},
+    ),
+    DataProvider(
+        provider_id="scrape402_diff",
+        resource_url="https://scrape402.xyz/diff/snapshot",
+        method="POST",
+        request_kwargs={"json": {"url": "https://example.com"}},
     ),
 ]
 
