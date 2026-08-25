@@ -1,7 +1,15 @@
 # Checklist manual — só o que exige login humano
 
+**Status: CONCLUÍDO (25/08).** Circle configurada, credenciais aplicadas
+no Cloud Run, pagamento real validado contra o serviço deployado (tx
+`0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3`,
+Base Sepolia). Este arquivo fica só como histórico do passo manual que
+foi necessário — nenhuma ação pendente aqui.
+
+---
+
 Tudo o resto do projeto já está construído, testado e deployado. Isto
-aqui é a ÚNICA parte que não dá pra automatizar: gerar credenciais da
+aqui foi a ÚNICA parte que não dava pra automatizar: gerar credenciais da
 Circle exige login no console web deles (2FA, sem forma de fazer
 programaticamente, e por segurança nenhum agente deve digitar sua
 senha).

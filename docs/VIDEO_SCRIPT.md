@@ -5,12 +5,31 @@ app real rodando → ElevenLabs narra (voz clonada do Igor) → ffmpeg monta.
 Diferença aqui: a "app" é o terminal rodando `adk run` + o dashboard do
 Cloud Run/Firestore no navegador (não uma UI web própria).
 
-**Desbloqueado 25/08**: Circle configurada e aplicada no serviço
-deployado. Pagamento real de ponta a ponta confirmado on-chain
-**direto contra o Cloud Run público** (Base Sepolia, tx
-`0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3`)
-— nada de pendência técnica restante. Pronto pra gravar os segmentos
-3/4 chamando o mesmo endpoint (`/run_sse` no serviço deployado).
+**GRAVADO 25/08**: `procurement_agent_demo_video.mp4` (42s, 1280x800,
+salvo em `OneDrive/Área de Trabalho/Screenshots/`). Pipeline real
+adaptado nesse dia por dois bloqueios de infra (não de conteúdo):
+
+- **Chrome extension (claude-in-chrome) não conectada** após o reboot
+  do PC → usei Playwright MCP (browser próprio, não depende da
+  extensão) pra capturar o GitHub real. Console do Cloud Run/Firestore
+  (exige login Google) foi substituído por saída real de
+  `gcloud run services list` / `gcloud firestore databases list` —
+  mesma prova, sem depender de sessão logada no navegador.
+- **BaseScan bloqueou com challenge anti-bot (403)** → em vez de
+  contornar, mostrei a leitura raw da RPC (`eth_getTransactionReceipt`,
+  status 0x1, tx real) — na verdade mais forte como prova, e é
+  literalmente o que `onchain_verify.py` faz.
+- **ElevenLabs com fatura em atraso (401 payment_required)** → vídeo
+  saiu **sem narração**, só com legendas em tela em inglês (cumpre a
+  exigência "em inglês ou com legenda em inglês" mesmo assim). Pra
+  adicionar a voz clonada do Igor depois: resolver a fatura na
+  ElevenLabs, e eu regenero os 5 áudios + remonto (pipeline modular,
+  script fica pronto pra reuso).
+
+Todo o conteúdo do vídeo é dado real: tx real
+(`0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3`),
+provedores/preços reais, saída real do `gcloud`/`curl` contra o
+serviço deployado.
 
 ## Exigências da submissão (Devpost) que o vídeo TEM que cumprir
 - Overview do problema + proposta de valor + demo em ação
@@ -70,10 +89,13 @@ audit, real payment, independent verification. Built for the Taskmaster
 category of the All Things Agentic Hackathon. Code's public, link
 below."
 
-## Checklist de gravação (quando a Circle estiver pronta)
-- [ ] Rodar o fluxo real 1x pra garantir que sai tudo limpo antes de gravar
-- [ ] Playwright/screenshot do terminal + BaseScan + Cloud Run + Firestore
-- [ ] ElevenLabs: reaproveitar a voz clonada do Igor (`AwOG8GsiTbwBq3sHLpmX`, mesma do AgentPay)
-- [ ] ffmpeg monta em 1280x800, ~3min30s
-- [ ] Revisar de verdade (extrair frame de cada segmento + `silencedetect` no áudio) antes de publicar
+## Checklist de gravação
+- [x] Rodar o fluxo real 1x pra garantir que sai tudo limpo antes de gravar (feito 25/08, tx real capturada)
+- [x] Capturas reais (GitHub via Playwright, terminal com o trace real, RPC on-chain, `gcloud`) — trocado BaseScan/Cloud
+      Run console por alternativas sem login/anti-bot, ver nota acima
+- [ ] ElevenLabs: reaproveitar a voz clonada do Igor (`AwOG8GsiTbwBq3sHLpmX`) — **bloqueado, fatura em atraso**
+- [x] ffmpeg monta em 1280x800 — saiu 42s (sem narração ainda, ritmo mais curto que os 3min30 planejados)
+- [x] Revisado (frame extraído de cada segmento antes de salvar); sem áudio ainda, `silencedetect` não se aplica
+- [ ] Assistir o vídeo final e aprovar (ou pedir ajuste) antes do upload
+- [ ] Upload no YouTube — **manual, só o Igor pode** (sem tool de upload de vídeo)
 - [ ] Upload no YouTube — **manual, só o Igor pode** (sem tool de upload de vídeo)
