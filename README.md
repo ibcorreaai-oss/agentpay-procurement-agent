@@ -87,6 +87,22 @@ adk deploy cloud_run --project=<seu-projeto> --region=us-central1 \
   --service_name=agentpay-procurement procurement_agent
 ```
 
+**Importante:** o `.env` local NÃO é lido pelo servidor ADK rodando no
+Cloud Run (só pelo `adk run` local via CLI) — as variáveis de ambiente
+precisam ser configuradas explicitamente no próprio serviço depois do
+deploy, ou toda requisição real quebra com 500 (achado testando o
+serviço deployado de verdade, não só localmente):
+
+```bash
+gcloud run services update agentpay-procurement --region=us-central1 \
+  --set-env-vars="GOOGLE_GENAI_USE_ENTERPRISE=1,GOOGLE_CLOUD_PROJECT=<seu-projeto>,GOOGLE_CLOUD_LOCATION=global"
+```
+
+Gemini 3.5 no Vertex AI só existe no endpoint `global` — usar uma
+região específica (ex.: `us-central1`) na variável `GOOGLE_CLOUD_LOCATION`
+dá 404 "model not found", mesmo que o serviço Cloud Run em si esteja
+rodando nessa região sem problema.
+
 ## Testes
 
 ```bash
