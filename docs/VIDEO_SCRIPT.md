@@ -5,9 +5,10 @@ app real rodando → ElevenLabs narra (voz clonada do Igor) → ffmpeg monta.
 Diferença aqui: a "app" é o terminal rodando `adk run` + o dashboard do
 Cloud Run/Firestore no navegador (não uma UI web própria).
 
-**GRAVADO 25/08**: `procurement_agent_demo_video.mp4` (42s, 1280x800,
-salvo em `OneDrive/Área de Trabalho/Screenshots/`). Pipeline real
-adaptado nesse dia por dois bloqueios de infra (não de conteúdo):
+**GRAVADO 25/08**: `procurement_agent_demo_video.mp4` (2min07s,
+1280x800, com narração, salvo em `OneDrive/Área de Trabalho/Screenshots/`).
+Pipeline real adaptado nesse dia por três bloqueios de infra (não de
+conteúdo):
 
 - **Chrome extension (claude-in-chrome) não conectada** após o reboot
   do PC → usei Playwright MCP (browser próprio, não depende da
@@ -19,17 +20,21 @@ adaptado nesse dia por dois bloqueios de infra (não de conteúdo):
   contornar, mostrei a leitura raw da RPC (`eth_getTransactionReceipt`,
   status 0x1, tx real) — na verdade mais forte como prova, e é
   literalmente o que `onchain_verify.py` faz.
-- **ElevenLabs com fatura em atraso (401 payment_required)** → vídeo
-  saiu **sem narração**, só com legendas em tela em inglês (cumpre a
-  exigência "em inglês ou com legenda em inglês" mesmo assim). Pra
-  adicionar a voz clonada do Igor depois: resolver a fatura na
-  ElevenLabs, e eu regenero os 5 áudios + remonto (pipeline modular,
-  script fica pronto pra reuso).
+- **ElevenLabs com fatura em atraso (401 payment_required)** → resolvido
+  trocando de ferramenta de TTS: usei `generate_audio` da Higgsfield
+  (modelo `seed_audio`, voz preset masculina "Arthur" —
+  `30fc8796-ceb6-4a66-b3a7-4a145ef7f346`, não é a voz clonada do Igor,
+  é do catálogo deles) pra gerar as 6 narrações. Vídeo final saiu com
+  narração completa. Se Igor resolver a fatura da ElevenLabs depois e
+  quiser a voz clonada (`AwOG8GsiTbwBq3sHLpmX`), é só regenerar os 6
+  áudios com os mesmos textos e remontar.
 
 Todo o conteúdo do vídeo é dado real: tx real
 (`0xca2aa6adde336b0276af2274445901df0f235d73f74def8463a9fd6a78e6e0f3`),
 provedores/preços reais, saída real do `gcloud`/`curl` contra o
-serviço deployado.
+serviço deployado. Narração em inglês, textos exatos usados em cada
+segmento documentados abaixo (roteiro original), com pequenos ajustes
+pra soarem naturais faladas em voz alta.
 
 ## Exigências da submissão (Devpost) que o vídeo TEM que cumprir
 - Overview do problema + proposta de valor + demo em ação
@@ -93,9 +98,9 @@ below."
 - [x] Rodar o fluxo real 1x pra garantir que sai tudo limpo antes de gravar (feito 25/08, tx real capturada)
 - [x] Capturas reais (GitHub via Playwright, terminal com o trace real, RPC on-chain, `gcloud`) — trocado BaseScan/Cloud
       Run console por alternativas sem login/anti-bot, ver nota acima
-- [ ] ElevenLabs: reaproveitar a voz clonada do Igor (`AwOG8GsiTbwBq3sHLpmX`) — **bloqueado, fatura em atraso**
-- [x] ffmpeg monta em 1280x800 — saiu 42s (sem narração ainda, ritmo mais curto que os 3min30 planejados)
-- [x] Revisado (frame extraído de cada segmento antes de salvar); sem áudio ainda, `silencedetect` não se aplica
-- [ ] Assistir o vídeo final e aprovar (ou pedir ajuste) antes do upload
+- [x] Narração: ElevenLabs bloqueada (fatura) → gerado com Higgsfield (`seed_audio`, voz "Arthur"), 6 áudios reais
+- [x] ffmpeg monta em 1280x800 — saiu 2min07s (vídeo+áudio com crossfade sincronizado, `xfade`+`acrossfade`)
+- [x] Revisado (frame extraído de cada segmento + `silencedetect` no áudio final — sem silêncio >1.5s)
+- [ ] Assistir o vídeo final e aprovar (ou pedir ajuste, ex.: trocar a voz depois que a ElevenLabs for resolvida)
 - [ ] Upload no YouTube — **manual, só o Igor pode** (sem tool de upload de vídeo)
 - [ ] Upload no YouTube — **manual, só o Igor pode** (sem tool de upload de vídeo)
